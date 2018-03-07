@@ -1,0 +1,47 @@
+{% extends "layout.html" %}
+{% block body %}
+    <form>
+        <div class="form-group">
+            <div class="row">
+                {% for col in cols %}
+                    <div class="col">
+                        <select multiple="multiple" class="custom-select" style="text-overflow:ellipsis;">
+                            {% for val in uniques[col] %}
+                                <option> {{ val }} </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </form>
+    <div class="row">
+        <div class="col">
+            <table class="table table-hover">
+                <tr>
+                    {% for col in cols %}
+                        <th> {{ col }} <br>
+                            <select multiple="multiple" class="custom-select" style="text-overflow:ellipsis;">
+                                {% for val in uniques[col] %}
+                                    <option> {{ val }} </option>
+                                {% endfor %}
+                            </select></th>
+                    {% endfor %}
+                </tr>
+                {% for entry in entries %}
+                    <tr>
+                        {% for value in entry %}
+                            <td> {{ value }}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            $('.custom-select').select2();
+        });
+    </script>
+{% endblock %}
