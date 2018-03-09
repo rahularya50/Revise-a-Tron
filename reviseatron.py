@@ -1,7 +1,7 @@
 # coding=utf-8
 import os
 import sqlite3
-from flask import Flask, g, render_template
+from flask import Flask, g, render_template, request
 
 app = Flask(__name__)
 app.config.from_object(__name__)
@@ -59,6 +59,11 @@ def close_db(error):
 
 @app.route('/')
 def hello_world():
+    return render_template('layout.html')
+
+
+@app.route('/table_gen')
+def gen_tables():
     db = get_db()
     cur = db.execute('SELECT ' + ", ".join(DISPLAY_COLS) + ' FROM entries')
     entries = cur.fetchall()
