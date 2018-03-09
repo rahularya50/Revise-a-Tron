@@ -2,12 +2,16 @@
  * Created by rahul on 08-Mar-18.
  */
 
+var ready = false;
+
 $(document).ajaxComplete(function () {
-    $(".table-selector").change(function () {
-        var params = $(".table-selector").serialize();
-        console.log(params);
-        resync(params, false);
-    });
+    if (!ready) {
+        ready = true;
+        $(".table-selector").change(function () {
+            var params = $(".table-selector").serialize();
+            resync(params, false);
+        });
+    }
 });
 
 $(document).ready(function () {
@@ -16,7 +20,7 @@ $(document).ready(function () {
 
 function resync(params, get_all) {
     $.ajax({
-        url: "/table_gen?sentinel=0&" + params,
+        url: "/table_gen?" + params,
         success: [function (result) {
             if (get_all) {
                 $("#fancy-table").html(result);

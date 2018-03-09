@@ -65,7 +65,25 @@ def hello_world():
 @app.route('/table_gen')
 def gen_tables():
     db = get_db()
-    cur = db.execute('SELECT ' + ", ".join(DISPLAY_COLS) + ' FROM entries')
+    sql = 'SELECT ' + ", ".join(DISPLAY_COLS) + ' FROM entries'
+    args = []
+    for col in DISPLAY_COLS:
+        if col in request.args:
+            if args:
+                sql += " AND ("
+            else:
+                sql += " WHERE ("
+
+            for arg in request.args.getlist(col):
+                sql += "{}=? OR ".format(col)
+                args.append(arg)
+
+            sql = sql[:-4]
+            sql += ")"
+
+    print(sql)
+
+    cur = db.execute(sql, args)
     entries = cur.fetchall()
 
     uniques = {}
