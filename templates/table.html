@@ -29,9 +29,16 @@
             <tbody id="table-data">
                 {% for entry in entries %}
                     <tr class="fancy-table-row">
+
                         {% for value in entry %}
                             <td data-column="{{ cols[loop.index0] }}" data-value="{{ value }}"> {{ value }}</td>
                         {% endfor %}
+
+                        {% for value in hidden_entries[loop.index0] %}
+                            <td style="display: none" data-column="{{ hiddens[loop.index0] }}" data-value="{{ value }}">
+                            </td>
+                        {% endfor %}
+
                     </tr>
                 {% endfor %}
             </tbody>

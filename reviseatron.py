@@ -8,6 +8,7 @@ app.config.from_object(__name__)
 
 
 DISPLAY_COLS = ["Paper", "Year", "Month", "Topics", "Person"]
+HIDDEN_COLS = ["Question_link", "Answer_link"]
 
 
 # Load default config and override config from an environment variable
@@ -58,39 +59,48 @@ def close_db(error):
 
 
 @app.route('/')
-def hello_world():
-    return render_template('layout.html', cols=DISPLAY_COLS)
+def main():
+    return render_template('layout.html', cols=DISPLAY_COLS, hiddens=HIDDEN_COLS)
 
 
 @app.route('/table_gen')
 def gen_tables():
     db = get_db()
-    sql = 'SELECT ' + ", ".join(DISPLAY_COLS) + ' FROM entries'
+
+    where_clause = ''
     args = []
     for col in DISPLAY_COLS:
         if col in request.args:
             if args:
-                sql += " AND ("
+                where_clause += " AND ("
             else:
-                sql += " WHERE ("
+                where_clause += " WHERE ("
 
             for arg in request.args.getlist(col):
-                sql += "{}=? OR ".format(col)
+                where_clause += "{}=? OR ".format(col)
                 args.append(arg)
 
-            sql = sql[:-4]
-            sql += ")"
+                where_clause = where_clause[:-4]
+                where_clause += ")"
 
-    print(sql)
+    sql = 'SELECT ' + ", ".join(DISPLAY_COLS) + ' FROM entries'
+    cur = db.execute(sql + where_clause, args)
+    display_entries = cur.fetchall()
 
-    cur = db.execute(sql, args)
-    entries = cur.fetchall()
+    sql = 'SELECT ' + ", ".join(HIDDEN_COLS) + ' FROM entries'
+    cur = db.execute(sql + where_clause, args)
+    hidden_entries = cur.fetchall()
 
     uniques = {}
     for col in DISPLAY_COLS:
         cur = db.execute('SELECT DISTINCT ' + col + ' FROM entries')
         uniques[col] = list(i[0] for i in cur.fetchall())
-    return render_template('table.html', cols=DISPLAY_COLS, entries=entries, uniques=uniques)
+    return render_template('table.html',
+                           cols=DISPLAY_COLS,
+                           hiddens=HIDDEN_COLS,
+                           entries=display_entries,
+                           hidden_entries=hidden_entries,
+                           uniques=uniques)
 
 
 if __name__ == '__main__':
