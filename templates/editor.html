@@ -1,0 +1,35 @@
+<!-- Test Button -->
+
+<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#editor">
+  Test Modal
+</button>
+
+<!-- Modal -->
+<div class="modal fade" id="editor" tabindex="-1" role="dialog" aria-labelledby="modal-label" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal-label">Edit / Insert Entry</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <table class="table">
+                    <tbody>
+                    {% for col in cols %}
+                        <tr>
+                            <th scope="row"> {{ col }} </th>
+                            <td id="{{ col }}-indicator">Value</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Discard Changes</button>
+                <button type="button" class="btn btn-primary">Commit Changes</button>
+            </div>
+        </div>
+    </div>
+</div>

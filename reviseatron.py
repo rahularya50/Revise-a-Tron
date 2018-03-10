@@ -59,7 +59,7 @@ def close_db(error):
 
 @app.route('/')
 def hello_world():
-    return render_template('layout.html')
+    return render_template('layout.html', cols=DISPLAY_COLS)
 
 
 @app.route('/table_gen')
@@ -90,7 +90,7 @@ def gen_tables():
     for col in DISPLAY_COLS:
         cur = db.execute('SELECT DISTINCT ' + col + ' FROM entries')
         uniques[col] = list(i[0] for i in cur.fetchall())
-    return render_template('show_entries.html', cols=DISPLAY_COLS, entries=entries, uniques=uniques)
+    return render_template('table.html', cols=DISPLAY_COLS, entries=entries, uniques=uniques)
 
 
 if __name__ == '__main__':

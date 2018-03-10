@@ -21,8 +21,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js/select2.min.js"></script>
 
     <script src="{{ url_for('static', filename='js/update_table.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/manage_modal.js') }}"></script>
 
-    {#<link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">#}
+    <link rel=stylesheet type=text/css href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
@@ -47,4 +48,7 @@
     <h1 class="mt-5">Revise-a-tron</h1>
     <div id="fancy-table"></div>
 </div>
+
+{% include "editor.html" %}
+
 </body>
