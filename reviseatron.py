@@ -1,14 +1,17 @@
 # coding=utf-8
 import os
 import sqlite3
-from flask import Flask, g, render_template, request
+from flask import Flask, g, render_template, request, flash
 
 app = Flask(__name__)
 app.config.from_object(__name__)
 
-
 DISPLAY_COLS = ["Paper", "Year", "Month", "Topics", "Person"]
 HIDDEN_COLS = ["Question_link", "Answer_link"]
+
+APP_ROOT = os.path.dirname(os.path.abspath(__file__))
+UPLOAD_FOLDER = os.path.join(APP_ROOT, './user_imgs/')
+ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
 
 
 # Load default config and override config from an environment variable
@@ -16,7 +19,8 @@ app.config.update(dict(
     DATABASE=os.path.join(app.root_path, 'flaskr.db'),
     SECRET_KEY='development key',
     USERNAME='admin',
-    PASSWORD='default'
+    PASSWORD='default',
+    UPLOAD_FOLDER=UPLOAD_FOLDER
 ))
 app.config.from_envvar('FLASKR_SETTINGS', silent=True)
 
@@ -101,6 +105,34 @@ def gen_tables():
                            entries=display_entries,
                            hidden_entries=hidden_entries,
                            uniques=uniques)
+
+
+@app.route('/receiver', methods=["GET", "POST"])
+def file_receiver():
+    count = 0
+    if request.method == "POST":
+        for target_name in HIDDEN_COLS:
+            count += save_file(target_name)
+    return "{} files saved!".format(count)
+
+
+def save_file(target_name):
+    if target_name not in request.files:
+        return False
+    file = request.files[target_name]
+    if file and allowed_file(file.filename):
+        file.save(os.path.join(UPLOAD_FOLDER, target_name+"."+get_extension(file.filename)))
+        return True
+    return False
+
+
+def allowed_file(filename):
+    return '.' in filename and \
+           get_extension(filename) in ALLOWED_EXTENSIONS
+
+
+def get_extension(filename):
+    return filename.rsplit('.', 1)[1].lower()
 
 
 if __name__ == '__main__':
