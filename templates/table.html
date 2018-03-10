@@ -30,7 +30,7 @@
                 {% for entry in entries %}
                     <tr class="fancy-table-row">
                         {% for value in entry %}
-                            <td> {{ value }}</td>
+                            <td data-column="{{ cols[loop.index0] }}" data-value="{{ value }}"> {{ value }}</td>
                         {% endfor %}
                     </tr>
                 {% endfor %}

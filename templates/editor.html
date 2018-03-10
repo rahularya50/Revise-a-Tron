@@ -1,9 +1,3 @@
-<!-- Test Button -->
-
-<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#editor">
-  Test Modal
-</button>
-
 <!-- Modal -->
 <div class="modal fade" id="editor" tabindex="-1" role="dialog" aria-labelledby="modal-label" aria-hidden="true">
     <div class="modal-dialog" role="document">
@@ -19,7 +13,7 @@
                     <tbody>
                     {% for col in cols %}
                         <tr>
-                            <th scope="row"> {{ col }} </th>
+                            <th> {{ col }} </th>
                             <td id="{{ col }}-indicator">Value</td>
                         </tr>
                     {% endfor %}
