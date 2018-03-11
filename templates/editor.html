@@ -16,7 +16,11 @@
                             <th> {{ col }} </th>
                             <td class="view-only" id="{{ col }}-indicator">Value</td>
                             <td class="edit-only">
-                                <input class="form-control simple-input" data-column="{{ col }}" id="{{ col }}-input">
+                                <select class="simple-input" data-column="{{ col }}" id="{{ col }}-input">
+                                    {% for val in uniques[col] %}
+                                        <option> {{ val }} </option>
+                                    {% endfor %}
+                                </select>
                             </td>
                         </tr>
                     {% endfor %}
@@ -29,19 +33,46 @@
                     <img id="{{ col }}-modal-image" class="modal-image" src="">
                     <br>
                     <input
-                        class="edit-only form-control file-upload" type="file" data-column="{{ col }}" id="{{ col }}"
+                            class="edit-only form-control file-upload" type="file" data-column="{{ col }}"
+                            id="{{ col }}"
                     >
                     <br>
                 {% endfor %}
+
+                <div class="alert alert-danger alert-dismissible fade show" id="submission-error" role="alert">
+                    <strong>Error</strong> An error occurred. Please ensure that all fields are non-empty.
+                    <button type="button" class="close" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
             </div>
             <div class="view-only modal-footer">
                 <button id="modal-edit" type="button" class="btn btn-secondary">Edit</button>
                 <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
             </div>
             <div class="edit-only modal-footer">
+                <button type="button" class="btn btn-danger modify-only" id="delete-button">Delete</button>
                 <button type="button" class="btn btn-secondary" id="discard-changes-button">Discard Changes</button>
                 <button type="button" class="btn btn-primary" id="save-changes-button">Save Changes</button>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    $(document).ready(function () {
+        $('.simple-input').select2({
+            tags: true,
+            width: "100%",
+            height: "100%",
+            dropdownParent: $("#editor")
+        });
+
+        $('.alert .close').on('click', function (e) {
+            $(this).parent().hide();
+        });
+
+        $(".alert").hide();
+    });
+</script>

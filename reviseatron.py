@@ -1,6 +1,8 @@
 # coding=utf-8
 import os
 import sqlite3
+import uuid
+
 from flask import Flask, g, render_template, request, flash
 from werkzeug.utils import secure_filename
 
@@ -66,7 +68,14 @@ def close_db(error):
 
 @app.route('/')
 def main():
-    return render_template('layout.html', cols=DISPLAY_COLS, hiddens=HIDDEN_COLS)
+    db = get_db()
+
+    uniques = {}
+    for col in DISPLAY_COLS:
+        cur = db.execute('SELECT DISTINCT ' + col + ' FROM entries')
+        uniques[col] = list(i[0] for i in cur.fetchall())
+
+    return render_template('layout.html', cols=DISPLAY_COLS, hiddens=HIDDEN_COLS, uniques=uniques)
 
 
 @app.route('/table_gen')
@@ -118,34 +127,61 @@ def gen_tables():
 def file_receiver():
     if request.method == "POST":
         data = []
+        if 'rowid' not in request.form:
+            return ''
         rowid = request.form['rowid']
+
         changed_cols = []
         for col in DISPLAY_COLS:
             changed_cols.append(col)
             data.append(request.form[col])
         for target_name in HIDDEN_COLS:
-            x = save_file(target_name, rowid)
+            x = save_file(target_name)
             if x:
                 changed_cols.append(target_name)
                 data.append(x)
 
-        sql = "UPDATE entries SET {0} = ? WHERE ROWID = ?".format(" = ?, ".join(changed_cols))
+        if rowid != '-1':
+            sql = "UPDATE entries SET {0} = ? WHERE ROWID = ?".format(" = ?, ".join(changed_cols))
+            data.append(rowid)
+        else:
+            sql = "INSERT INTO entries ({0}) VALUES ({1})".format(", ".join(changed_cols),
+                                                                  ", ".join("?" * len(changed_cols)))
+
         print(sql)
-        data.append(rowid)
-
         db = get_db()
-        db.execute(sql, data)
-        db.commit()
 
-    return "success!"
+        try:
+            lastrowid = db.execute(sql, data).lastrowid
+            db.commit()
+            lastrowid = lastrowid if lastrowid else rowid
+        except sqlite3.Error as er:
+            return "fail"
+
+        return str(lastrowid)
+
+    return "fail"
 
 
-def save_file(target_name, id):
+@app.route('/delete_entry')
+def delete_entry():
+    if 'rowid' not in request.args:
+        return False
+    rowid = request.args["rowid"]
+
+    db = get_db()
+    db.execute("DELETE FROM entries WHERE ROWID = ?", [rowid])
+    db.commit()
+
+    return "Deleted {}".format(rowid)
+
+
+def save_file(target_name):
     if target_name not in request.files:
         return False
     file = request.files[target_name]
     if file and allowed_file(file.filename):
-        local_path = secure_filename(id)+"_"+target_name+"."+get_extension(file.filename)
+        local_path = secure_filename(file.filename)+str(uuid.uuid4())+"."+get_extension(file.filename)
         file.save(os.path.join(UPLOAD_FOLDER, local_path))
         return LOCAL_PATH + local_path
     return ""

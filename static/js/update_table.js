@@ -7,10 +7,7 @@ var ready = false;
 $(document).ajaxComplete(function () {
     if (!ready) {
         ready = true;
-        $(".table-selector").change(function () {
-            var params = $(".table-selector").serialize();
-            resync(params, false);
-        });
+        $(".table-selector").change(resync_selectors);
     }
 });
 
@@ -30,4 +27,9 @@ function resync(params, get_all) {
             }
         }]
     });
+}
+
+function resync_selectors() {
+    var params = $(".table-selector").serialize();
+    resync(params, false);
 }
