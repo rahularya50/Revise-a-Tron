@@ -25,7 +25,7 @@ $(document).ready(function () {
         $(".edit-only").hide();
     });
 
-    $("#save-changes-button").click(function () { // TODO: Update to handle case of new elements - get rowid from response?
+    $("#save-changes-button").click(function () {
         var form_data = new FormData();
         form_data.append("rowid", activeModalId);
         $(".simple-input").each(function () {

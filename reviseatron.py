@@ -9,7 +9,8 @@ from werkzeug.utils import secure_filename
 app = Flask(__name__)
 app.config.from_object(__name__)
 
-DISPLAY_COLS = ["Paper", "Year", "Month", "Topics", "Person"]
+DISPLAY_COLS = ["Paper", "Year", "Month", "Person"]
+LINKED_COLS = {"Topics": "topics_table"}
 HIDDEN_COLS = ["Question_link", "Answer_link"]
 
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -75,7 +76,11 @@ def main():
         cur = db.execute('SELECT DISTINCT ' + col + ' FROM entries')
         uniques[col] = list(i[0] for i in cur.fetchall())
 
-    return render_template('layout.html', cols=DISPLAY_COLS, hiddens=HIDDEN_COLS, uniques=uniques)
+    for col in LINKED_COLS:
+        cur = db.execute('SELECT DISTINCT value FROM {0}'.format(LINKED_COLS[col]))
+        uniques[col] = list(i[0] for i in cur.fetchall())
+
+    return render_template('layout.html', cols=DISPLAY_COLS, hiddens=HIDDEN_COLS, uniques=uniques, linked=LINKED_COLS)
 
 
 @app.route('/table_gen')
@@ -124,7 +129,7 @@ def gen_tables():
 
 
 @app.route('/receiver', methods=["GET", "POST"])
-def file_receiver():
+def receiver():
     if request.method == "POST":
         data = []
         if 'rowid' not in request.form:
@@ -149,12 +154,28 @@ def file_receiver():
                                                                   ", ".join("?" * len(changed_cols)))
 
         print(sql)
+        print(data)
         db = get_db()
 
         try:
             lastrowid = db.execute(sql, data).lastrowid
+        except sqlite3.Error as er:
+            return "fail"
+
+        lastrowid = lastrowid if lastrowid else rowid
+
+        try:
+            for col in LINKED_COLS:
+                print(col)
+                sql = "DELETE FROM {0} WHERE id = ?".format(LINKED_COLS[col])
+                print(sql)
+                db.execute(sql, [lastrowid])
+                to_add = request.form.get(col).split(",")  # TODO: WAT
+                for elem in to_add:
+                    sql = "INSERT INTO {0} (id, value) VALUES (?, ?)".format(LINKED_COLS[col])
+                    print(sql)
+                    db.execute(sql, [lastrowid, elem])
             db.commit()
-            lastrowid = lastrowid if lastrowid else rowid
         except sqlite3.Error as er:
             return "fail"
 
