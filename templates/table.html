@@ -28,7 +28,7 @@
             </tr>
             <tbody id="table-data">
                 {% for entry in entries %}
-                    <tr class="fancy-table-row">
+                    <tr class="fancy-table-row" data-rowid="{{ rowids[loop.index0][0] }}">
 
                         {% for value in entry %}
                             <td data-column="{{ cols[loop.index0] }}" data-value="{{ value }}"> {{ value }}</td>

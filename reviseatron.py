@@ -2,6 +2,7 @@
 import os
 import sqlite3
 from flask import Flask, g, render_template, request, flash
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.config.from_object(__name__)
@@ -10,7 +11,8 @@ DISPLAY_COLS = ["Paper", "Year", "Month", "Topics", "Person"]
 HIDDEN_COLS = ["Question_link", "Answer_link"]
 
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
-UPLOAD_FOLDER = os.path.join(APP_ROOT, './user_imgs/')
+LOCAL_PATH = './static/user_imgs/'
+UPLOAD_FOLDER = os.path.join(APP_ROOT, LOCAL_PATH)
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
 
 
@@ -87,13 +89,17 @@ def gen_tables():
                 where_clause = where_clause[:-4]
                 where_clause += ")"
 
-    sql = 'SELECT ' + ", ".join(DISPLAY_COLS) + ' FROM entries'
-    cur = db.execute(sql + where_clause, args)
+    sql = 'SELECT {0} FROM entries'.format(", ".join(DISPLAY_COLS))
+    cur = db.execute(sql + where_clause + " ORDER BY ROWID", args)
     display_entries = cur.fetchall()
 
-    sql = 'SELECT ' + ", ".join(HIDDEN_COLS) + ' FROM entries'
-    cur = db.execute(sql + where_clause, args)
+    sql = 'SELECT {0} FROM entries'.format(", ".join(HIDDEN_COLS))
+    cur = db.execute("{0}{1} ORDER BY ROWID".format(sql, where_clause), args)
     hidden_entries = cur.fetchall()
+
+    sql = 'SELECT ROWID FROM entries'
+    cur = db.execute(sql + where_clause + " ORDER BY ROWID", args)
+    rowids = cur.fetchall()
 
     uniques = {}
     for col in DISPLAY_COLS:
@@ -104,26 +110,45 @@ def gen_tables():
                            hiddens=HIDDEN_COLS,
                            entries=display_entries,
                            hidden_entries=hidden_entries,
-                           uniques=uniques)
+                           uniques=uniques,
+                           rowids=rowids)
 
 
 @app.route('/receiver', methods=["GET", "POST"])
 def file_receiver():
-    count = 0
     if request.method == "POST":
+        data = []
+        rowid = request.form['rowid']
+        changed_cols = []
+        for col in DISPLAY_COLS:
+            changed_cols.append(col)
+            data.append(request.form[col])
         for target_name in HIDDEN_COLS:
-            count += save_file(target_name)
-    return "{} files saved!".format(count)
+            x = save_file(target_name, rowid)
+            if x:
+                changed_cols.append(target_name)
+                data.append(x)
+
+        sql = "UPDATE entries SET {0} = ? WHERE ROWID = ?".format(" = ?, ".join(changed_cols))
+        print(sql)
+        data.append(rowid)
+
+        db = get_db()
+        db.execute(sql, data)
+        db.commit()
+
+    return "success!"
 
 
-def save_file(target_name):
+def save_file(target_name, id):
     if target_name not in request.files:
         return False
     file = request.files[target_name]
     if file and allowed_file(file.filename):
-        file.save(os.path.join(UPLOAD_FOLDER, target_name+"."+get_extension(file.filename)))
-        return True
-    return False
+        local_path = secure_filename(id)+"_"+target_name+"."+get_extension(file.filename)
+        file.save(os.path.join(UPLOAD_FOLDER, local_path))
+        return LOCAL_PATH + local_path
+    return ""
 
 
 def allowed_file(filename):

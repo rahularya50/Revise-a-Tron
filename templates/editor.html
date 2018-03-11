@@ -15,7 +15,9 @@
                         <tr>
                             <th> {{ col }} </th>
                             <td class="view-only" id="{{ col }}-indicator">Value</td>
-                            <td class="edit-only"> <input class="form-control" id="{{ col }}-input"> </td>
+                            <td class="edit-only">
+                                <input class="form-control simple-input" data-column="{{ col }}" id="{{ col }}-input">
+                            </td>
                         </tr>
                     {% endfor %}
                     </tbody>
@@ -24,7 +26,7 @@
                 {% for col in hiddens %}
                     <b> {{ col }} </b>
                     <br>
-                    <img id="{{ col }}-modal-image" src="">
+                    <img id="{{ col }}-modal-image" class="modal-image" src="">
                     <br>
                     <input
                         class="edit-only form-control file-upload" type="file" data-column="{{ col }}" id="{{ col }}"
@@ -34,10 +36,10 @@
             </div>
             <div class="view-only modal-footer">
                 <button id="modal-edit" type="button" class="btn btn-secondary">Edit</button>
-                <button type="button" class="btn btn-primary">Close</button>
+                <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
             </div>
             <div class="edit-only modal-footer">
-                <button type="button" class="btn btn-secondary">Discard Changes</button>
+                <button type="button" class="btn btn-secondary" id="discard-changes-button">Discard Changes</button>
                 <button type="button" class="btn btn-primary" id="save-changes-button">Save Changes</button>
             </div>
         </div>
