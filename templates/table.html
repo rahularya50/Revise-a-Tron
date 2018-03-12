@@ -17,7 +17,7 @@
     <div class="col">
         <table class="table table-hover">
             <tr>
-                {% for col in cols %}
+                {% for col in cols + linked %}
                     <th> {{ col }} <br>
                         <select name={{ col }} multiple="multiple" class="table-selector custom-select" style="text-overflow:ellipsis;">
                             {% for val in uniques[col] %}
@@ -32,6 +32,16 @@
 
                         {% for value in entry %}
                             <td data-column="{{ cols[loop.index0] }}" data-value="{{ value }}"> {{ value }}</td>
+                        {% endfor %}
+
+                        {% for col, value in linked_entries[loop.index0].items() %}
+                            <td data-column="{{ col }}" data-value="{{ jsonify(value) }}">
+                                <ul>
+                                    {% for x in value %}
+                                        <li>{{ x }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </td>
                         {% endfor %}
 
                         {% for value in hidden_entries[loop.index0] %}

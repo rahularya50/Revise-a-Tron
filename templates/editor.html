@@ -27,7 +27,7 @@
                     {% for col in linked %}
                         <tr>
                             <th> {{ col }} </th>
-                            <td class="view-only" id="{{ col }}-indicator">Value</td>
+                            <td class="view-only" id="{{ col }}-indicator"><ul></ul></td>
                             <td class="edit-only">
                                 <select multiple class="simple-input" data-column="{{ col }}" id="{{ col }}-input">
                                     {% for val in uniques[col] %}

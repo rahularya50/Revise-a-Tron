@@ -82,9 +82,22 @@ function updateModal() {
         $(".edit-only").hide();
         $(".modify-only").show();
         $(activeRow).find("td").each(function () {
-            $("#" + this.dataset.column + "-indicator").html(this.dataset.value);
-            $("#" + this.dataset.column + "-input").val(this.dataset.value).trigger('change');
-            $("#" + this.dataset.column + "-modal-image").prop("src", this.dataset.value);
+            var col = $(this).data("column");
+            var val = $(this).data("value");
+            console.log(val);
+            console.log(Array.isArray(val));
+            if (Array.isArray(val)) {
+                $("#" + col + "-indicator").html("<ul></ul>");
+                $.each(val, function (index, value) {
+                    $("#" + col + "-indicator > ul").append("<li>" + value + "</li>");
+                });
+                $("#" + col + "-input").val(val).trigger('change');
+            }
+            else {
+                $("#" + col + "-indicator").html(val);
+                $("#" + col + "-input").val(val).trigger('change');
+            }
+            $("#" + col + "-modal-image").prop("src", val);
         })
     }
 }

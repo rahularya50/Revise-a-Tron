@@ -1,7 +1,9 @@
 # coding=utf-8
+import json
 import os
 import sqlite3
 import uuid
+from collections import defaultdict
 
 from flask import Flask, g, render_template, request, flash
 from werkzeug.utils import secure_filename
@@ -57,6 +59,7 @@ def get_db():
     """
     if not hasattr(g, 'sqlite_db'):
         g.sqlite_db = connect_db()
+    g.sqlite_db.execute("PRAGMA foreign_keys = ON")
     return g.sqlite_db
 
 
@@ -108,24 +111,42 @@ def gen_tables():
     display_entries = cur.fetchall()
 
     sql = 'SELECT {0} FROM entries'.format(", ".join(HIDDEN_COLS))
-    cur = db.execute("{0}{1} ORDER BY ROWID".format(sql, where_clause), args)
+    cur = db.execute(sql + where_clause + " ORDER BY ROWID", args)
     hidden_entries = cur.fetchall()
 
     sql = 'SELECT ROWID FROM entries'
     cur = db.execute(sql + where_clause + " ORDER BY ROWID", args)
     rowids = cur.fetchall()
 
+    linked_entries = []
+    for _ in rowids:
+        linked_entries.append({})
+
+    for i, col in enumerate(LINKED_COLS):
+        for j, id in enumerate(rowids):
+            sql = 'SELECT value FROM {0} WHERE id={1} ORDER BY ROWID'.format(LINKED_COLS[col], id[0])
+            print(sql)
+            cur = db.execute(sql)
+            linked_entries[j][col] = [x[0] for x in cur.fetchall()]
+
     uniques = {}
     for col in DISPLAY_COLS:
         cur = db.execute('SELECT DISTINCT ' + col + ' FROM entries')
         uniques[col] = list(i[0] for i in cur.fetchall())
+    for col in LINKED_COLS:
+        cur = db.execute('SELECT DISTINCT value FROM {0}'.format(LINKED_COLS[col]))
+        uniques[col] = list(i[0] for i in cur.fetchall())
+
     return render_template('table.html',
                            cols=DISPLAY_COLS,
                            hiddens=HIDDEN_COLS,
+                           linked=[*LINKED_COLS.keys()],
                            entries=display_entries,
                            hidden_entries=hidden_entries,
+                           linked_entries=linked_entries,
                            uniques=uniques,
-                           rowids=rowids)
+                           rowids=rowids,
+                           jsonify=json.dumps)
 
 
 @app.route('/receiver', methods=["GET", "POST"])
@@ -170,7 +191,7 @@ def receiver():
                 sql = "DELETE FROM {0} WHERE id = ?".format(LINKED_COLS[col])
                 print(sql)
                 db.execute(sql, [lastrowid])
-                to_add = request.form.get(col).split(",")  # TODO: WAT
+                to_add = request.form.get(col).split(",")  # TODO: Implement list decomposition properly!
                 for elem in to_add:
                     sql = "INSERT INTO {0} (id, value) VALUES (?, ?)".format(LINKED_COLS[col])
                     print(sql)
