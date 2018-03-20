@@ -11,7 +11,7 @@ from werkzeug.utils import secure_filename
 app = Flask(__name__)
 app.config.from_object(__name__)
 
-DISPLAY_COLS = ["Paper", "Year", "Month", "Person"]
+DISPLAY_COLS = ["Paper", "Year", "Month", "Question_num", "Person"]
 LINKED_COLS = {"Topics": "topics_table"}
 HIDDEN_COLS = ["Question_link", "Answer_link"]
 
@@ -103,8 +103,8 @@ def gen_tables():
                 where_clause += "{}=? OR ".format(col)
                 args.append(arg)
 
-                where_clause = where_clause[:-4]
-                where_clause += ")"
+            where_clause = where_clause[:-4]
+            where_clause += ")"
 
     sql = 'SELECT {0} FROM entries'.format(", ".join(DISPLAY_COLS))
     cur = db.execute(sql + where_clause + " ORDER BY ROWID", args)

@@ -20,9 +20,13 @@ $(document).ready(function () {
     });
 
     $("#discard-changes-button").click(function () {
-
-        $(".view-only").show();
-        $(".edit-only").hide();
+        if (activeModalId === -1) {
+            $("#editor").modal('hide');
+        }
+        else {
+            $(".view-only").show();
+            $(".edit-only").hide();
+        }
     });
 
     $("#save-changes-button").click(function () {
@@ -107,6 +111,6 @@ function newModal() {
     $(".edit-only").show();
     $("#submission-error").hide();
     $(".modify-only").show();
-    $(".simple-input").val("").trigger('change');
+    // $(".simple-input").val("").trigger('change');
     $(".modal-image").prop("src", "");
 }
