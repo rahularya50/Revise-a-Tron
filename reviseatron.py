@@ -90,6 +90,32 @@ def main():
 def gen_tables():
     db = get_db()
 
+    sql = 'SELECT ROWID FROM entries'
+    cur = db.execute(sql)
+    ids = set(cur.fetchall())
+
+    for col in LINKED_COLS:
+        if col in request.args:
+            where_clause = ' WHERE ('
+            args = []
+            for arg in request.args.getlist(col):
+                where_clause += "value=? OR "
+                args.append(arg)
+            where_clause = where_clause[:-4] + ")"
+            sql = 'SELECT id FROM {0}'.format(LINKED_COLS[col])
+            cur = db.execute(sql + where_clause + " ORDER BY ROWID", args)
+            if ids is None:
+                ids = set(cur.fetchall())
+            else:
+                ids &= set(cur.fetchall())
+
+    ids_clause = " AND ("
+    id_args = []
+    for id in ids:
+        ids_clause += "id = ? OR "
+        id_args.append(id)
+    ids_clause = ids_clause[:-4] + ")"
+
     where_clause = ''
     args = []
     for col in DISPLAY_COLS:
@@ -103,19 +129,19 @@ def gen_tables():
                 where_clause += "{}=? OR ".format(col)
                 args.append(arg)
 
-            where_clause = where_clause[:-4]
-            where_clause += ")"
+            where_clause = where_clause[:-4] + ")"
 
     sql = 'SELECT {0} FROM entries'.format(", ".join(DISPLAY_COLS))
-    cur = db.execute(sql + where_clause + " ORDER BY ROWID", args)
+    print(sql + where_clause + ids_clause)
+    cur = db.execute(sql + where_clause + ids_clause + " ORDER BY ROWID", args + id_args)
     display_entries = cur.fetchall()
 
     sql = 'SELECT {0} FROM entries'.format(", ".join(HIDDEN_COLS))
-    cur = db.execute(sql + where_clause + " ORDER BY ROWID", args)
+    cur = db.execute(sql + where_clause + ids_clause + " ORDER BY ROWID", args + id_args)
     hidden_entries = cur.fetchall()
 
     sql = 'SELECT ROWID FROM entries'
-    cur = db.execute(sql + where_clause + " ORDER BY ROWID", args)
+    cur = db.execute(sql + where_clause + ids_clause + " ORDER BY ROWID", args + id_args)
     rowids = cur.fetchall()
 
     linked_entries = []
